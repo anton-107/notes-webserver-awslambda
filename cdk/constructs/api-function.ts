@@ -14,6 +14,7 @@ interface APIFunctionProps {
   path: string;
   main: string;
   depsLockFilePath: string;
+  handler: string;
 }
 export class APIFunction extends Construct {
   public readonly integration: LambdaIntegration;
@@ -24,9 +25,10 @@ export class APIFunction extends Construct {
     super(parent, `api-${props.method}-${props.path}`);
     const name = `api-${props.method}-${props.path}`;
     const func = new NodejsFunction(this, name, {
-      entry: props.main,
-      depsLockFilePath: props.depsLockFilePath,
       ...this.defaultFunctionProps,
+      entry: props.main,
+      handler: props.handler,
+      depsLockFilePath: props.depsLockFilePath
     });
 
     this.integration = new LambdaIntegration(func);

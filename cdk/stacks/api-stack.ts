@@ -16,6 +16,7 @@ export class ApiStack extends Stack {
           main: `${route.import}.js`,
           method: route.method,
           path: route.path,
+          handler: route.action,
         });
       }),
     });
