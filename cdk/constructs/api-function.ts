@@ -28,7 +28,7 @@ export class APIFunction extends Construct {
       ...this.defaultFunctionProps,
       entry: props.main,
       handler: props.handler,
-      depsLockFilePath: props.depsLockFilePath
+      depsLockFilePath: props.depsLockFilePath,
     });
 
     this.integration = new LambdaIntegration(func);
