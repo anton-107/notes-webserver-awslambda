@@ -15,6 +15,7 @@ interface APIFunctionProps {
   main: string;
   depsLockFilePath: string;
   handler: string;
+  environment: { [key: string]: string };
 }
 export class APIFunction extends Construct {
   public readonly integration: LambdaIntegration;
@@ -29,6 +30,7 @@ export class APIFunction extends Construct {
       entry: props.main,
       handler: props.handler,
       depsLockFilePath: props.depsLockFilePath,
+      environment: props.environment,
     });
 
     this.integration = new LambdaIntegration(func);

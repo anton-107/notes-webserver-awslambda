@@ -17,6 +17,9 @@ export class ApiStack extends Stack {
           method: route.method,
           path: route.path,
           handler: route.action,
+          environment: {
+            BASE_URL: "/prod",
+          },
         });
       }),
     });
