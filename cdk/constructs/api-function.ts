@@ -1,5 +1,6 @@
 import { Stack } from "aws-cdk-lib";
 import { LambdaIntegration } from "aws-cdk-lib/aws-apigateway";
+import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
@@ -16,6 +17,7 @@ interface APIFunctionProps {
   depsLockFilePath: string;
   handler: string;
   environment: { [key: string]: string };
+  readPermissions: Table[];
 }
 export class APIFunction extends Construct {
   public readonly integration: LambdaIntegration;
@@ -36,6 +38,8 @@ export class APIFunction extends Construct {
     this.integration = new LambdaIntegration(func);
     this.method = props.method;
     this.path = props.path;
+
+    props.readPermissions.forEach((t) => t.grantReadData(func));
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
     return {
