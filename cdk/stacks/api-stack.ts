@@ -36,6 +36,7 @@ export class ApiStack extends Stack {
           handler: route.action,
           environment: {
             BASE_URL: "/prod",
+            USER_STORE_TYPE: "dynamodb",
           },
           readPermissions: this.getReadPermissions(route.method, route.path),
         });
