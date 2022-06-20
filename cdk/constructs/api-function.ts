@@ -6,6 +6,7 @@ import {
   NodejsFunction,
   NodejsFunctionProps,
 } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 
 type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -17,7 +18,8 @@ interface APIFunctionProps {
   depsLockFilePath: string;
   handler: string;
   environment: { [key: string]: string };
-  readPermissions: Table[];
+  tableReadPermissions: Table[];
+  secretReadPermissions: Secret[];
 }
 export class APIFunction extends Construct {
   public readonly integration: LambdaIntegration;
@@ -39,7 +41,8 @@ export class APIFunction extends Construct {
     this.method = props.method;
     this.path = props.path;
 
-    props.readPermissions.forEach((t) => t.grantReadData(func));
+    props.tableReadPermissions.forEach((t) => t.grantReadData(func));
+    props.secretReadPermissions.forEach((s) => s.grantRead(func));
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
     return {

@@ -4,12 +4,17 @@ import { routes } from "notes-webserver/dist/router";
 import { APIFunction } from "../constructs/api-function";
 import { join } from "path";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 
 export class ApiStack extends Stack {
   private usersTable: Table;
 
   constructor(private parent: App) {
     super(parent, "NotesWebserverApiStack");
+
+    const jwtSerializerSecret = new Secret(this, "jwtSerializerSecret", {
+      description: "jwtSerializerSecret for notes-webserver application",
+    });
 
     this.usersTable = new Table(this, "usersTable", {
       partitionKey: {
@@ -25,24 +30,29 @@ export class ApiStack extends Stack {
       writeCapacity: 1,
     });
 
+    const apiFunctions = routes.map((route) => {
+      return new APIFunction(this, {
+        depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
+        main: `${route.import}.js`,
+        method: route.method,
+        path: route.path,
+        handler: route.action,
+        environment: {
+          BASE_URL: "/prod",
+          USER_STORE_TYPE: "dynamodb",
+          JWT_SERIALIZER_SECRET_ID: jwtSerializerSecret.secretName,
+        },
+        tableReadPermissions: this.getReadPermissions(route.method, route.path),
+        secretReadPermissions: [jwtSerializerSecret],
+      });
+    });
+
     new APIGateway(this, {
       apiName: "NotesWebserverAPI",
-      functions: routes.map((route) => {
-        return new APIFunction(this, {
-          depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
-          main: `${route.import}.js`,
-          method: route.method,
-          path: route.path,
-          handler: route.action,
-          environment: {
-            BASE_URL: "/prod",
-            USER_STORE_TYPE: "dynamodb",
-          },
-          readPermissions: this.getReadPermissions(route.method, route.path),
-        });
-      }),
+      functions: apiFunctions,
     });
   }
+
   private getReadPermissions(method: string, path: string): Table[] {
     switch (method) {
       case "POST":
