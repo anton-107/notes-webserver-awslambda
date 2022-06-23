@@ -8,6 +8,7 @@ import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 
 export class ApiStack extends Stack {
   private usersTable: Table;
+  private notebooksTable: Table;
 
   constructor(private parent: App) {
     super(parent, "NotesWebserverApiStack");
@@ -30,6 +31,20 @@ export class ApiStack extends Stack {
       writeCapacity: 1,
     });
 
+    this.notebooksTable = new Table(this, "notebooks", {
+      partitionKey: {
+        name: "owner",
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: "sortKey",
+        type: AttributeType.STRING,
+      },
+      tableName: "notes-webserver-notebook",
+      readCapacity: 1,
+      writeCapacity: 1,
+    });
+
     const apiFunctions = routes.map((route) => {
       return new APIFunction(this, {
         depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
@@ -40,9 +55,14 @@ export class ApiStack extends Stack {
         environment: {
           BASE_URL: "/prod",
           USER_STORE_TYPE: "dynamodb",
+          NOTEBOOK_STORE_TYPE: "dynamodb",
           JWT_SERIALIZER_SECRET_ID: jwtSerializerSecret.secretName,
         },
         tableReadPermissions: this.getReadPermissions(route.method, route.path),
+        tableWritePermissions: this.getWritePermissions(
+          route.method,
+          route.path
+        ),
         secretReadPermissions: [jwtSerializerSecret],
       });
     });
@@ -60,6 +80,24 @@ export class ApiStack extends Stack {
           case "/signin":
             return [this.usersTable];
         }
+        break;
+      case "GET":
+        switch (path) {
+          case "/home":
+            return [this.notebooksTable];
+        }
+        break;
+    }
+    return [];
+  }
+  private getWritePermissions(method: string, path: string): Table[] {
+    switch (method) {
+      case "POST":
+        switch (path) {
+          case "/notebook":
+            return [this.notebooksTable];
+        }
+        break;
     }
     return [];
   }

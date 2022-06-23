@@ -19,6 +19,7 @@ interface APIFunctionProps {
   handler: string;
   environment: { [key: string]: string };
   tableReadPermissions: Table[];
+  tableWritePermissions: Table[];
   secretReadPermissions: Secret[];
 }
 export class APIFunction extends Construct {
@@ -42,6 +43,7 @@ export class APIFunction extends Construct {
     this.path = props.path;
 
     props.tableReadPermissions.forEach((t) => t.grantReadData(func));
+    props.tableWritePermissions.forEach((t) => t.grantWriteData(func));
     props.secretReadPermissions.forEach((s) => s.grantRead(func));
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
