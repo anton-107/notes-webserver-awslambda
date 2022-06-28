@@ -50,7 +50,7 @@ export class ApiStack extends Stack {
         depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
         main: `${route.import}.js`,
         method: route.method,
-        path: route.path,
+        path: this.preparePath(route.path),
         handler: route.action,
         environment: {
           BASE_URL: "/prod",
@@ -85,6 +85,8 @@ export class ApiStack extends Stack {
         switch (path) {
           case "/home":
             return [this.notebooksTable];
+          case "/notebook/:notebookID":
+            return [this.notebooksTable];
         }
         break;
     }
@@ -100,5 +102,9 @@ export class ApiStack extends Stack {
         break;
     }
     return [];
+  }
+  private preparePath(path: string) {
+    // converting from Express format of path param's to API GW format:
+    return path.replace(":notebookID", "{notebookID}");
   }
 }
