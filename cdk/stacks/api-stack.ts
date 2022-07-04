@@ -86,6 +86,7 @@ export class ApiStack extends Stack {
           case "/home":
             return [this.notebooksTable];
           case "/notebook/:notebookID":
+          case "/notebook/:notebookID/edit":
             return [this.notebooksTable];
         }
         break;
@@ -97,6 +98,7 @@ export class ApiStack extends Stack {
       case "POST":
         switch (path) {
           case "/notebook":
+          case "/notebook/:notebookID/edit":
           case "/delete-notebook":
             return [this.notebooksTable];
         }
