@@ -24,7 +24,7 @@ export class APIGateway extends Construct {
       const pathParts = path.split("/");
 
       let currentResource = api.root;
-      let currentPath = '';
+      let currentPath = "";
       pathParts.forEach((part) => {
         if (part) {
           currentPath += `/${part}`;
