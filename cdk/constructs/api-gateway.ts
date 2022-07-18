@@ -24,13 +24,15 @@ export class APIGateway extends Construct {
       const pathParts = path.split("/");
 
       let currentResource = api.root;
+      let currentPath = '';
       pathParts.forEach((part) => {
         if (part) {
-          if (!this.resources[part]) {
+          currentPath += `/${part}`;
+          if (!this.resources[currentPath]) {
             currentResource = currentResource.addResource(part);
-            this.resources[part] = currentResource;
+            this.resources[currentPath] = currentResource;
           } else {
-            currentResource = this.resources[part];
+            currentResource = this.resources[currentPath];
           }
         }
       });
