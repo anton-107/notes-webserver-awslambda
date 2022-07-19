@@ -48,7 +48,7 @@ export class ApiStack extends Stack {
 
     this.peopleTable = new Table(this, "people", {
       partitionKey: {
-        name: "owner",
+        name: "manager",
         type: AttributeType.STRING,
       },
       sortKey: {
