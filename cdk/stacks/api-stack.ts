@@ -87,6 +87,7 @@ export class ApiStack extends Stack {
     new APIGateway(this, {
       apiName: "NotesWebserverAPI",
       functions: apiFunctions,
+      apiAccessControlAllowOrigin: "'*'",
     });
   }
 
