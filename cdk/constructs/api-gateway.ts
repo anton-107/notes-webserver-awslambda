@@ -59,7 +59,7 @@ export class APIGateway extends Construct {
               "method.response.header.Access-Control-Allow-Origin":
                 this.props.apiAccessControlAllowOrigin,
               "method.response.header.Access-Control-Allow-Credentials":
-                "'false'",
+                "'true'",
               "method.response.header.Access-Control-Allow-Methods":
                 "'OPTIONS,GET,PUT,POST,PATCH,DELETE'",
             },

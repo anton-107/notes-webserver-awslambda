@@ -60,6 +60,8 @@ export class ApiStack extends Stack {
       writeCapacity: 1,
     });
 
+    const corsAllowedOrigins = "http://localhost:8080";
+
     const apiFunctions = routes.map((route) => {
       return new APIFunction(this, {
         depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
@@ -74,6 +76,7 @@ export class ApiStack extends Stack {
           NOTE_STORE_TYPE: "dynamodb",
           PERSON_STORE_TYPE: "dynamodb",
           JWT_SERIALIZER_SECRET_ID: jwtSerializerSecret.secretName,
+          CORS_ALLOWED_ORIGINS: corsAllowedOrigins,
         },
         tableReadPermissions: this.getReadPermissions(route.method, route.path),
         tableWritePermissions: this.getWritePermissions(
@@ -87,7 +90,7 @@ export class ApiStack extends Stack {
     new APIGateway(this, {
       apiName: "NotesWebserverAPI",
       functions: apiFunctions,
-      apiAccessControlAllowOrigin: "'*'",
+      apiAccessControlAllowOrigin: `'${corsAllowedOrigins}'`,
     });
   }
 
