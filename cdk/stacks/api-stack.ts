@@ -110,6 +110,7 @@ export class ApiStack extends Stack {
         switch (path) {
           case "/home":
             return [this.notebooksTable, this.peopleTable];
+          case "/notebook":
           case "/notebook/:notebookID/edit":
             return [this.notebooksTable];
           case "/notebook/:notebookID":
