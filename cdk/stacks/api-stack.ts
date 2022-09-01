@@ -112,6 +112,7 @@ export class ApiStack extends Stack {
             return [this.notebooksTable, this.peopleTable];
           case "/notebook":
           case "/notebook/:notebookID/edit":
+          case "/notebook/:notebookID/note":
             return [this.notebooksTable];
           case "/notebook/:notebookID":
           case "/notebook/:notebookID/new-note/:noteType":
