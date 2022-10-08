@@ -103,6 +103,7 @@ export class ApiStack extends Stack {
           case "/note":
           case "/note/:noteID/edit":
           case "/note/delete":
+          case "/delete-notebook":
             return [this.notebooksTable];
         }
         break;
