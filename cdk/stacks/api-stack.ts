@@ -105,6 +105,9 @@ export class ApiStack extends Stack {
           case "/note/delete":
           case "/delete-notebook":
             return [this.notebooksTable];
+          case "/delete-person":
+          case "/person/:personID/edit":
+            return [this.peopleTable];
         }
         break;
       case "GET":
@@ -119,6 +122,7 @@ export class ApiStack extends Stack {
           case "/notebook/:notebookID/new-note/:noteType":
           case "/notebook/:notebookID/note/:noteID/edit":
             return [this.notebooksTable, this.peopleTable];
+          case "/person":
           case "/person/:personID":
           case "/person/:personID/edit":
             return [this.peopleTable];
