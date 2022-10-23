@@ -100,6 +100,7 @@ export class ApiStack extends Stack {
         switch (path) {
           case "/signin":
             return [this.usersTable];
+          case "/notebook/:notebookID/edit":
           case "/note":
           case "/note/:noteID/edit":
           case "/note/delete":
