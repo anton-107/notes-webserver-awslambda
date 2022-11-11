@@ -1,10 +1,13 @@
 import { App, Stack } from "aws-cdk-lib";
 import { APIGateway } from "../constructs/api-gateway";
-import { routes } from "notes-webserver/dist/router";
+import { routes, actions } from "notes-webserver/dist/router";
 import { APIFunction } from "../constructs/api-function";
 import { join } from "path";
-import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { AttributeType, StreamViewType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
+import { Action } from "../constructs/action";
+import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { IEventSource, StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 export class ApiStack extends Stack {
   private usersTable: Table;
@@ -44,6 +47,7 @@ export class ApiStack extends Stack {
       tableName: "notes-webserver-notebook",
       readCapacity: 1,
       writeCapacity: 1,
+      stream: StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
     this.peopleTable = new Table(this, "people", {
@@ -91,6 +95,28 @@ export class ApiStack extends Stack {
       apiName: "NotesWebserverAPI",
       functions: apiFunctions,
       apiAccessControlAllowOrigin: `'${corsAllowedOrigins}'`,
+    });
+
+    actions.map((action) => {
+      new Action(this, {
+        actionName: action.actionName,
+        main: `${action.import}.js`,
+        handler: action.action,
+        depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
+        environment: {
+          YOUTUBE_PARSER_ENABLED: "true",
+        },
+        tableReadPermissions: this.getReadPermissions(
+          "async-action",
+          action.actionName
+        ),
+        tableWritePermissions: this.getWritePermissions(
+          "async-action",
+          action.actionName
+        ),
+        secretReadPermissions: [],
+        eventSource: this.getActionEventSource(action.eventSource),
+      });
     });
   }
 
@@ -159,5 +185,14 @@ export class ApiStack extends Stack {
       .replace(":personID", "{personID}")
       .replace(":noteType", "{noteType}")
       .replace(":noteID", "{noteID}");
+  }
+  private getActionEventSource(eventSourceName: string): IEventSource {
+    console.log(
+      "Currently always returning notebooks table as event source. Requested source name: ",
+      eventSourceName
+    );
+    return new DynamoEventSource(this.notebooksTable, {
+      startingPosition: StartingPosition.LATEST,
+    });
   }
 }
