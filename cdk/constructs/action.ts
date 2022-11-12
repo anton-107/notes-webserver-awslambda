@@ -1,4 +1,4 @@
-import { Stack } from "aws-cdk-lib";
+import { Duration, Stack } from "aws-cdk-lib";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import { IEventSource, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
@@ -18,6 +18,7 @@ interface ActionProps {
   tableWritePermissions: Table[];
   secretReadPermissions: Secret[];
   eventSource: IEventSource;
+  timeout: Duration;
 }
 
 export class Action extends Construct {
@@ -30,6 +31,7 @@ export class Action extends Construct {
       handler: props.handler,
       depsLockFilePath: props.depsLockFilePath,
       environment: props.environment,
+      timeout: props.timeout,
     });
     props.tableReadPermissions.forEach((t) => t.grantReadData(func));
     props.tableWritePermissions.forEach((t) => t.grantWriteData(func));

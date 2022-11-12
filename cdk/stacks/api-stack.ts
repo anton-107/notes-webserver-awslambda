@@ -1,4 +1,4 @@
-import { App, Stack } from "aws-cdk-lib";
+import { App, Duration, Stack } from "aws-cdk-lib";
 import { APIGateway } from "../constructs/api-gateway";
 import { routes, actions } from "notes-webserver/dist/router";
 import { APIFunction } from "../constructs/api-function";
@@ -103,6 +103,7 @@ export class ApiStack extends Stack {
         main: `${action.import}.js`,
         handler: action.action,
         depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
+        timeout: Duration.seconds(30),
         environment: {
           YOUTUBE_PARSER_ENABLED: "true",
         },
