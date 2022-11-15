@@ -5,6 +5,7 @@ import {
   NodejsFunction,
   NodejsFunctionProps,
 } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 
@@ -16,6 +17,8 @@ interface ActionProps {
   environment: { [key: string]: string };
   tableReadPermissions: Table[];
   tableWritePermissions: Table[];
+  bucketReadPermissions: Bucket[];
+  bucketWritePermissions: Bucket[];
   secretReadPermissions: Secret[];
   eventSource: IEventSource;
   timeout: Duration;
@@ -36,6 +39,11 @@ export class Action extends Construct {
     props.tableReadPermissions.forEach((t) => t.grantReadData(func));
     props.tableWritePermissions.forEach((t) => t.grantWriteData(func));
     props.secretReadPermissions.forEach((s) => s.grantRead(func));
+    props.bucketReadPermissions.forEach((s) => s.grantRead(func));
+    props.bucketWritePermissions.forEach((s) => {
+      s.grantWrite(func);
+      s.grantPut(func);
+    });
     func.addEventSource(props.eventSource);
   }
   private get defaultFunctionProps(): NodejsFunctionProps {

@@ -8,11 +8,17 @@ import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Action } from "../constructs/action";
 import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { IEventSource, StartingPosition } from "aws-cdk-lib/aws-lambda";
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketEncryption,
+} from "aws-cdk-lib/aws-s3";
 
 export class ApiStack extends Stack {
   private usersTable: Table;
   private notebooksTable: Table;
   private peopleTable: Table;
+  private attachmentsBucket: Bucket;
 
   constructor(private parent: App) {
     super(parent, "NotesWebserverApiStack");
@@ -64,6 +70,12 @@ export class ApiStack extends Stack {
       writeCapacity: 1,
     });
 
+    this.attachmentsBucket = new Bucket(this, "attachments", {
+      enforceSSL: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      encryption: BucketEncryption.S3_MANAGED,
+    });
+
     const corsAllowedOrigins = "http://localhost:8080";
 
     const apiFunctions = routes.map((route) => {
@@ -106,12 +118,19 @@ export class ApiStack extends Stack {
         timeout: Duration.seconds(30),
         environment: {
           YOUTUBE_PARSER_ENABLED: "true",
+          S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
+          S3_ATTACHMENTS_FOLDER: "attachments",
         },
         tableReadPermissions: this.getReadPermissions(
           "async-action",
           action.actionName
         ),
         tableWritePermissions: this.getWritePermissions(
+          "async-action",
+          action.actionName
+        ),
+        bucketReadPermissions: this.getBucketReadPermissions(),
+        bucketWritePermissions: this.getBucketWritePermissions(
           "async-action",
           action.actionName
         ),
@@ -174,6 +193,20 @@ export class ApiStack extends Stack {
           case "/person/:personID/edit":
           case "/delete-person":
             return [this.peopleTable];
+        }
+        break;
+    }
+    return [];
+  }
+  private getBucketReadPermissions(): Bucket[] {
+    return [];
+  }
+  private getBucketWritePermissions(method: string, path: string): Bucket[] {
+    switch (method) {
+      case "async-action":
+        switch (path) {
+          case "fetch-video-information":
+            return [this.attachmentsBucket];
         }
         break;
     }
