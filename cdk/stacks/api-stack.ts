@@ -90,6 +90,7 @@ export class ApiStack extends Stack {
           USER_STORE_TYPE: "dynamodb",
           NOTEBOOK_STORE_TYPE: "dynamodb",
           NOTE_STORE_TYPE: "dynamodb",
+          NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
           PERSON_STORE_TYPE: "dynamodb",
           JWT_SERIALIZER_SECRET_ID: jwtSerializerSecret.secretName,
           CORS_ALLOWED_ORIGINS: corsAllowedOrigins,
@@ -120,6 +121,7 @@ export class ApiStack extends Stack {
           YOUTUBE_PARSER_ENABLED: "true",
           S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
           S3_ATTACHMENTS_FOLDER: "attachments",
+          NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
         },
         tableReadPermissions: this.getReadPermissions(
           "async-action",
@@ -195,6 +197,11 @@ export class ApiStack extends Stack {
             return [this.peopleTable];
         }
         break;
+      case "async-action":
+        switch (path) {
+          case "fetch-video-information":
+            return [this.notebooksTable];
+        }
     }
     return [];
   }
