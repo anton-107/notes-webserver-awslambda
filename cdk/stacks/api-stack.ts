@@ -19,6 +19,7 @@ export class ApiStack extends Stack {
   private notebooksTable: Table;
   private peopleTable: Table;
   private attachmentsBucket: Bucket;
+  private attachmentsFolder = "attachments";
 
   constructor(private parent: App) {
     super(parent, "NotesWebserverApiStack");
@@ -94,6 +95,8 @@ export class ApiStack extends Stack {
           PERSON_STORE_TYPE: "dynamodb",
           JWT_SERIALIZER_SECRET_ID: jwtSerializerSecret.secretName,
           CORS_ALLOWED_ORIGINS: corsAllowedOrigins,
+          S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
+          S3_ATTACHMENTS_FOLDER: this.attachmentsFolder,
         },
         tableReadPermissions: this.getReadPermissions(route.method, route.path),
         tableWritePermissions: this.getWritePermissions(
@@ -101,6 +104,14 @@ export class ApiStack extends Stack {
           route.path
         ),
         secretReadPermissions: [jwtSerializerSecret],
+        bucketReadPermissions: this.getBucketReadPermissions(
+          route.method,
+          route.path
+        ),
+        bucketWritePermissions: this.getBucketWritePermissions(
+          route.method,
+          route.path
+        ),
       });
     });
 
@@ -120,7 +131,7 @@ export class ApiStack extends Stack {
         environment: {
           YOUTUBE_PARSER_ENABLED: "true",
           S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
-          S3_ATTACHMENTS_FOLDER: "attachments",
+          S3_ATTACHMENTS_FOLDER: this.attachmentsFolder,
           NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
         },
         tableReadPermissions: this.getReadPermissions(
@@ -131,7 +142,10 @@ export class ApiStack extends Stack {
           "async-action",
           action.actionName
         ),
-        bucketReadPermissions: this.getBucketReadPermissions(),
+        bucketReadPermissions: this.getBucketReadPermissions(
+          "async-action",
+          action.actionName
+        ),
         bucketWritePermissions: this.getBucketWritePermissions(
           "async-action",
           action.actionName
@@ -166,6 +180,7 @@ export class ApiStack extends Stack {
           case "/notebook":
           case "/notebook/:notebookID/edit":
           case "/notebook/:notebookID/note":
+          case "/note/:noteID/attachment/:attachmentID":
             return [this.notebooksTable];
           case "/notebook/:notebookID":
           case "/notebook/:notebookID/new-note/:noteType":
@@ -205,7 +220,14 @@ export class ApiStack extends Stack {
     }
     return [];
   }
-  private getBucketReadPermissions(): Bucket[] {
+  private getBucketReadPermissions(method: string, path: string): Bucket[] {
+    switch (method) {
+      case "GET":
+        switch (path) {
+          case "/note/:noteID/attachment/:attachmentID":
+            return [this.attachmentsBucket];
+        }
+    }
     return [];
   }
   private getBucketWritePermissions(method: string, path: string): Bucket[] {
@@ -225,7 +247,8 @@ export class ApiStack extends Stack {
       .replace(":notebookID", "{notebookID}")
       .replace(":personID", "{personID}")
       .replace(":noteType", "{noteType}")
-      .replace(":noteID", "{noteID}");
+      .replace(":noteID", "{noteID}")
+      .replace(":attachmentID", "{attachmentID}");
   }
   private getActionEventSource(eventSourceName: string): IEventSource {
     console.log(

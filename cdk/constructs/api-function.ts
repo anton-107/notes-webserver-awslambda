@@ -6,6 +6,7 @@ import {
   NodejsFunction,
   NodejsFunctionProps,
 } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 
@@ -20,6 +21,8 @@ interface APIFunctionProps {
   environment: { [key: string]: string };
   tableReadPermissions: Table[];
   tableWritePermissions: Table[];
+  bucketReadPermissions: Bucket[];
+  bucketWritePermissions: Bucket[];
   secretReadPermissions: Secret[];
 }
 export class APIFunction extends Construct {
@@ -45,6 +48,8 @@ export class APIFunction extends Construct {
     props.tableReadPermissions.forEach((t) => t.grantReadData(func));
     props.tableWritePermissions.forEach((t) => t.grantWriteData(func));
     props.secretReadPermissions.forEach((s) => s.grantRead(func));
+    props.bucketReadPermissions.forEach((b) => b.grantRead(func));
+    props.bucketWritePermissions.forEach((b) => b.grantWrite(func));
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
     return {
