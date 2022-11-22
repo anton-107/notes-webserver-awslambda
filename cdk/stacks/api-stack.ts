@@ -180,6 +180,7 @@ export class ApiStack extends Stack {
           case "/notebook":
           case "/notebook/:notebookID/edit":
           case "/notebook/:notebookID/note":
+          case "/note/:noteID/attachment":
           case "/note/:noteID/attachment/:attachmentID":
             return [this.notebooksTable];
           case "/notebook/:notebookID":
