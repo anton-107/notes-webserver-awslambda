@@ -14,6 +14,10 @@ import {
   BucketEncryption,
 } from "aws-cdk-lib/aws-s3";
 
+interface ApiStackProperties {
+  searchDomainEndpoint: string | undefined;
+}
+
 export class ApiStack extends Stack {
   private usersTable: Table;
   private notebooksTable: Table;
@@ -21,7 +25,7 @@ export class ApiStack extends Stack {
   private attachmentsBucket: Bucket;
   private attachmentsFolder = "attachments";
 
-  constructor(private parent: App) {
+  constructor(private parent: App, private properties: ApiStackProperties) {
     super(parent, "NotesWebserverApiStack");
 
     const jwtSerializerSecret = new Secret(this, "jwtSerializerSecret", {
@@ -97,6 +101,8 @@ export class ApiStack extends Stack {
           CORS_ALLOWED_ORIGINS: corsAllowedOrigins,
           S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
           S3_ATTACHMENTS_FOLDER: this.attachmentsFolder,
+          SEARCH_DOMAIN_ENDPOINT:
+            this.properties.searchDomainEndpoint || "undefined",
         },
         tableReadPermissions: this.getReadPermissions(route.method, route.path),
         tableWritePermissions: this.getWritePermissions(
