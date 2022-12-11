@@ -1,30 +1,28 @@
-import { App, Stack } from "aws-cdk-lib";
-import * as opensearch from "aws-cdk-lib/aws-opensearchservice";
+import { App, Stack, CfnResource, Reference } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 export class SearchStack extends Stack {
-  private domainEndpoint: string;
+  private domainEndpoint: Reference;
 
   constructor(private parent: App) {
     super(parent, "NotesWebserverSearchStack");
-    const searchDomain = new opensearch.Domain(
+    const collection = new CfnResource(
       this,
-      "NotesWebserver-ReferencesSearchDomain",
+      "NotesWebserver-ReferencesCollection",
       {
-        version: opensearch.EngineVersion.OPENSEARCH_1_3,
-        enableVersionUpgrade: true,
-        capacity: {
-          masterNodeInstanceType: "t3.small.search",
-          dataNodeInstanceType: "t3.small.search",
+        type: "AWS::OpenSearchServerless::Collection",
+        properties: {
+          Name: "noteswebserver-references",
+          Type: "SEARCH",
         },
       }
     );
-    this.domainEndpoint = searchDomain.domainEndpoint;
+    this.domainEndpoint = collection.getAtt("CollectionEndpoint");
 
     new s3.Bucket(this, "NotesWebserver-OpenSearchDeliveryBackup", {});
   }
 
-  public getDomainEndpoint(): string {
+  public getDomainEndpoint(): Reference {
     return this.domainEndpoint;
   }
 }

@@ -1,4 +1,4 @@
-import { App, Duration, Stack } from "aws-cdk-lib";
+import { App, Duration, Reference, Stack } from "aws-cdk-lib";
 import { APIGateway } from "../constructs/api-gateway";
 import { routes, actions } from "notes-webserver/dist/router";
 import { APIFunction } from "../constructs/api-function";
@@ -15,7 +15,7 @@ import {
 } from "aws-cdk-lib/aws-s3";
 
 interface ApiStackProperties {
-  searchDomainEndpoint: string | undefined;
+  searchDomainEndpoint: Reference | undefined;
 }
 
 export class ApiStack extends Stack {
@@ -101,8 +101,9 @@ export class ApiStack extends Stack {
           CORS_ALLOWED_ORIGINS: corsAllowedOrigins,
           S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
           S3_ATTACHMENTS_FOLDER: this.attachmentsFolder,
-          SEARCH_DOMAIN_ENDPOINT:
-            this.properties.searchDomainEndpoint || "undefined",
+          SEARCH_DOMAIN_ENDPOINT: this.properties.searchDomainEndpoint
+            ? this.properties.searchDomainEndpoint.toString()
+            : "undefined",
         },
         tableReadPermissions: this.getReadPermissions(route.method, route.path),
         tableWritePermissions: this.getWritePermissions(

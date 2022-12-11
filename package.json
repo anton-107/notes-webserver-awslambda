@@ -6,6 +6,7 @@
     "synthesize": "cdk synthesize",
     "deploy": "cdk deploy",
     "diff": "cdk diff",
+    "list-stacks": "cdk list",
     "check-format": "prettier --check .",
     "fix-format": "prettier --write .",
     "lint": "eslint . --ext .ts",
