@@ -259,12 +259,14 @@ export class ApiStack extends Stack {
       .replace(":attachmentID", "{attachmentID}");
   }
   private getActionEventSource(eventSourceName: string): IEventSource {
-    console.log(
-      "Currently always returning notebooks table as event source. Requested source name: ",
-      eventSourceName
-    );
-    return new DynamoEventSource(this.notebooksTable, {
-      startingPosition: StartingPosition.LATEST,
-    });
+    switch (eventSourceName) {
+      case "notebook-entries":
+      case "note-entries":
+        return new DynamoEventSource(this.notebooksTable, {
+          startingPosition: StartingPosition.LATEST,
+        });
+      default:
+        throw Error(`Event source not supported: ${eventSourceName}`);
+    }
   }
 }
