@@ -13,9 +13,11 @@ import {
   Bucket,
   BucketEncryption,
 } from "aws-cdk-lib/aws-s3";
+import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 
 interface ApiStackProperties {
   searchDomainEndpoint: Reference | undefined;
+  notebookDeletionStateMachine: StateMachine;
 }
 
 export class ApiStack extends Stack {
@@ -140,6 +142,8 @@ export class ApiStack extends Stack {
           S3_ATTACHMENTS_BUCKET: this.attachmentsBucket.bucketName,
           S3_ATTACHMENTS_FOLDER: this.attachmentsFolder,
           NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
+          NOTEBOOK_DELETION_STATE_MACHINE_ARN:
+            this.properties.notebookDeletionStateMachine.stateMachineArn,
         },
         tableReadPermissions: this.getReadPermissions(
           "async-action",
@@ -157,6 +161,7 @@ export class ApiStack extends Stack {
           "async-action",
           action.actionName
         ),
+        stateMachinePermissions: [this.properties.notebookDeletionStateMachine],
         secretReadPermissions: [],
         eventSource: this.getActionEventSource(action.eventSource),
       });

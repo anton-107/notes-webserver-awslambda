@@ -2,4 +2,14 @@
 
 Run:
 
-$ AWS_PROFILE=<YOUR CONFIGURED PROFILE NAME> AWS_REGION=<YOUR REGION> ENABLE_SEARCH=true npm run deploy -- --all
+```
+$ AWS_PROFILE=<YOUR CONFIGURED PROFILE NAME> AWS_REGION=<YOUR REGION> ENABLE_SEARCH=false npm run deploy -- --all
+```
+
+# Deploy an indvidual stack
+
+Run:
+
+```
+AWS_PROFILE=<YOUR CONFIGURED PROFILE NAME> AWS_REGION=eu-west-1 ENABLE_SEARCH=false npm run deploy -- NotesWebserverApiStack
+```

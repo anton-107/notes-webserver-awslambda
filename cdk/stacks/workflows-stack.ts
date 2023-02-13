@@ -11,6 +11,7 @@ import { join } from "path";
 import { TaskFunction } from "../constructs/task-function";
 
 export class WorkflowsStack extends Stack {
+  public readonly workflows: Record<string, StateMachine> = {};
   constructor(parent: App) {
     super(parent, "NotesWorkflowsStack");
 
@@ -47,9 +48,14 @@ export class WorkflowsStack extends Stack {
             : new Succeed(this, `${workflowName}-success`);
         tasks[i].next(next);
       }
-      new StateMachine(this, `notes-webserver-workflow-${workflowName}`, {
-        definition: tasks[0],
-      });
+      const stateMachine = new StateMachine(
+        this,
+        `notes-webserver-workflow-${workflowName}`,
+        {
+          definition: tasks[0],
+        }
+      );
+      this.workflows[workflow.name] = stateMachine;
     });
   }
 }

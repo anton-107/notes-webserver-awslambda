@@ -7,6 +7,7 @@ import {
 } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
+import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct } from "constructs";
 
 interface ActionProps {
@@ -20,6 +21,7 @@ interface ActionProps {
   bucketReadPermissions: Bucket[];
   bucketWritePermissions: Bucket[];
   secretReadPermissions: Secret[];
+  stateMachinePermissions: StateMachine[];
   eventSource: IEventSource;
   timeout: Duration;
 }
@@ -44,6 +46,7 @@ export class Action extends Construct {
       s.grantWrite(func);
       s.grantPut(func);
     });
+    props.stateMachinePermissions.forEach((sm) => sm.grantStartExecution(func));
     func.addEventSource(props.eventSource);
   }
   private get defaultFunctionProps(): NodejsFunctionProps {

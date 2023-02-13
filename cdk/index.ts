@@ -10,9 +10,10 @@ function main() {
     enableServerlessCollection: process.env["ENABLE_SEARCH"] === "true",
   });
   searchDomainEndpoint = searchStack.getDomainEndpoint();
+  const workflowStack = new WorkflowsStack(app);
   new ApiStack(app, {
     searchDomainEndpoint,
+    notebookDeletionStateMachine: workflowStack.workflows["notebook-deletion"],
   });
-  new WorkflowsStack(app);
 }
 main();
