@@ -12,4 +12,5 @@ Run:
 
 ```
 AWS_PROFILE=<YOUR CONFIGURED PROFILE NAME> AWS_REGION=eu-west-1 ENABLE_SEARCH=false npm run deploy -- NotesWebserverApiStack
+AWS_PROFILE=<YOUR CONFIGURED PROFILE NAME> AWS_REGION=eu-west-1 ENABLE_SEARCH=false npm run deploy -- NotesWorkflowsStack
 ```
