@@ -1,4 +1,5 @@
 import { Stack } from "aws-cdk-lib";
+import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime, IFunction } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
@@ -13,6 +14,8 @@ interface TaskFunctionProps {
   depsLockFilePath: string;
   handler: string;
   environment: { [key: string]: string };
+  tableReadPermissions: ITable[];
+  tableWritePermissions: ITable[];
 }
 export class TaskFunction extends Construct {
   public readonly lambdaFunction: IFunction;

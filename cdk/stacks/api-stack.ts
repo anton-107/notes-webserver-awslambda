@@ -3,7 +3,7 @@ import { APIGateway } from "../constructs/api-gateway";
 import { routes, actions } from "notes-webserver/dist/router";
 import { APIFunction } from "../constructs/api-function";
 import { join } from "path";
-import { AttributeType, StreamViewType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Action } from "../constructs/action";
 import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
@@ -16,14 +16,14 @@ import {
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
 
 interface ApiStackProperties {
+  usersTable: ITable;
+  notebooksTable: ITable;
+  peopleTable: ITable;
   searchDomainEndpoint: Reference | undefined;
   notebookDeletionStateMachine: StateMachine;
 }
 
 export class ApiStack extends Stack {
-  private usersTable: Table;
-  private notebooksTable: Table;
-  private peopleTable: Table;
   private attachmentsBucket: Bucket;
   private attachmentsFolder = "attachments";
 
@@ -32,49 +32,6 @@ export class ApiStack extends Stack {
 
     const jwtSerializerSecret = new Secret(this, "jwtSerializerSecret", {
       description: "jwtSerializerSecret for notes-webserver application",
-    });
-
-    this.usersTable = new Table(this, "usersTable", {
-      partitionKey: {
-        name: "username",
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: "sortKey",
-        type: AttributeType.STRING,
-      },
-      tableName: "notes-webserver-users",
-      readCapacity: 1,
-      writeCapacity: 1,
-    });
-
-    this.notebooksTable = new Table(this, "notebooks", {
-      partitionKey: {
-        name: "owner",
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: "sortKey",
-        type: AttributeType.STRING,
-      },
-      tableName: "notes-webserver-notebook",
-      readCapacity: 1,
-      writeCapacity: 1,
-      stream: StreamViewType.NEW_AND_OLD_IMAGES,
-    });
-
-    this.peopleTable = new Table(this, "people", {
-      partitionKey: {
-        name: "manager",
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: "sortKey",
-        type: AttributeType.STRING,
-      },
-      tableName: "notes-webserver-people",
-      readCapacity: 1,
-      writeCapacity: 1,
     });
 
     this.attachmentsBucket = new Bucket(this, "attachments", {
@@ -168,47 +125,53 @@ export class ApiStack extends Stack {
     });
   }
 
-  private getReadPermissions(method: string, path: string): Table[] {
+  private getReadPermissions(method: string, path: string): ITable[] {
     switch (method) {
       case "POST":
         switch (path) {
           case "/signin":
-            return [this.usersTable];
+            return [this.properties.usersTable];
           case "/notebook/:notebookID/edit":
           case "/note":
           case "/note/:noteID/edit":
           case "/note/delete":
           case "/delete-notebook":
-            return [this.notebooksTable];
+            return [this.properties.notebooksTable];
           case "/delete-person":
           case "/person/:personID/edit":
-            return [this.peopleTable];
+            return [this.properties.peopleTable];
         }
         break;
       case "GET":
         switch (path) {
           case "/home":
-            return [this.notebooksTable, this.peopleTable];
+            return [
+              this.properties.notebooksTable,
+              this.properties.peopleTable,
+            ];
           case "/notebook":
           case "/notebook/:notebookID/edit":
           case "/notebook/:notebookID/note":
           case "/note/:noteID/attachment":
           case "/note/:noteID/attachment/:attachmentID":
-            return [this.notebooksTable];
+            return [this.properties.notebooksTable];
           case "/notebook/:notebookID":
           case "/notebook/:notebookID/new-note/:noteType":
           case "/notebook/:notebookID/note/:noteID/edit":
-            return [this.notebooksTable, this.peopleTable];
+            return [
+              this.properties.notebooksTable,
+              this.properties.peopleTable,
+            ];
           case "/person":
           case "/person/:personID":
           case "/person/:personID/edit":
-            return [this.peopleTable];
+            return [this.properties.peopleTable];
         }
         break;
     }
     return [];
   }
-  private getWritePermissions(method: string, path: string): Table[] {
+  private getWritePermissions(method: string, path: string): ITable[] {
     switch (method) {
       case "POST":
         switch (path) {
@@ -218,17 +181,17 @@ export class ApiStack extends Stack {
           case "/note":
           case "/note/:noteID/edit":
           case "/note/delete":
-            return [this.notebooksTable];
+            return [this.properties.notebooksTable];
           case "/person":
           case "/person/:personID/edit":
           case "/delete-person":
-            return [this.peopleTable];
+            return [this.properties.peopleTable];
         }
         break;
       case "async-action":
         switch (path) {
           case "fetch-video-information":
-            return [this.notebooksTable];
+            return [this.properties.notebooksTable];
         }
     }
     return [];
@@ -267,7 +230,7 @@ export class ApiStack extends Stack {
     switch (eventSourceName) {
       case "notebook-entries":
       case "note-entries":
-        return new DynamoEventSource(this.notebooksTable, {
+        return new DynamoEventSource(this.properties.notebooksTable, {
           startingPosition: StartingPosition.LATEST,
         });
       default:

@@ -1,5 +1,5 @@
 import { Duration, Stack } from "aws-cdk-lib";
-import { Table } from "aws-cdk-lib/aws-dynamodb";
+import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { IEventSource, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
@@ -16,8 +16,8 @@ interface ActionProps {
   handler: string;
   depsLockFilePath: string;
   environment: { [key: string]: string };
-  tableReadPermissions: Table[];
-  tableWritePermissions: Table[];
+  tableReadPermissions: ITable[];
+  tableWritePermissions: ITable[];
   bucketReadPermissions: Bucket[];
   bucketWritePermissions: Bucket[];
   secretReadPermissions: Secret[];

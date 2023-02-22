@@ -1,4 +1,5 @@
 import { App, Stack } from "aws-cdk-lib";
+import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import {
   IChainable,
   INextable,
@@ -10,9 +11,13 @@ import { workflows } from "notes-webserver/dist/router";
 import { join } from "path";
 import { TaskFunction } from "../constructs/task-function";
 
+interface WorkflowsStackProperties {
+  notebooksTable: ITable;
+}
+
 export class WorkflowsStack extends Stack {
   public readonly workflows: Record<string, StateMachine> = {};
-  constructor(parent: App) {
+  constructor(parent: App, private properties: WorkflowsStackProperties) {
     super(parent, "NotesWorkflowsStack");
 
     workflows.map((workflow) => {
@@ -36,7 +41,13 @@ export class WorkflowsStack extends Stack {
                 "package-lock.json"
               ),
               handler: task.action.action,
-              environment: {},
+              environment: {
+                NOTEBOOK_STORE_TYPE: "dynamodb",
+                NOTE_STORE_TYPE: "dynamodb",
+                NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
+              },
+              tableReadPermissions: [this.properties.notebooksTable],
+              tableWritePermissions: [this.properties.notebooksTable],
             }).lambdaFunction,
           })
         );

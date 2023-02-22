@@ -1,6 +1,6 @@
 import { Stack } from "aws-cdk-lib";
 import { LambdaIntegration } from "aws-cdk-lib/aws-apigateway";
-import { Table } from "aws-cdk-lib/aws-dynamodb";
+import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
@@ -19,8 +19,8 @@ interface APIFunctionProps {
   depsLockFilePath: string;
   handler: string;
   environment: { [key: string]: string };
-  tableReadPermissions: Table[];
-  tableWritePermissions: Table[];
+  tableReadPermissions: ITable[];
+  tableWritePermissions: ITable[];
   bucketReadPermissions: Bucket[];
   bucketWritePermissions: Bucket[];
   secretReadPermissions: Secret[];
