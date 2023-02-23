@@ -30,6 +30,12 @@ export class TaskFunction extends Construct {
       depsLockFilePath: props.depsLockFilePath,
       environment: props.environment,
     });
+    props.tableReadPermissions.forEach((t) =>
+      t.grantReadData(this.lambdaFunction)
+    );
+    props.tableWritePermissions.forEach((t) =>
+      t.grantWriteData(this.lambdaFunction)
+    );
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
     return {
