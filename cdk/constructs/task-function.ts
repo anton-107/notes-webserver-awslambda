@@ -1,4 +1,4 @@
-import { Stack } from "aws-cdk-lib";
+import { Duration, Stack } from "aws-cdk-lib";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime, IFunction } from "aws-cdk-lib/aws-lambda";
 import {
@@ -39,6 +39,7 @@ export class TaskFunction extends Construct {
   }
   private get defaultFunctionProps(): NodejsFunctionProps {
     return {
+      timeout: Duration.seconds(10),
       bundling: {
         loader: {
           ".node": "file",

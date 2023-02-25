@@ -28,29 +28,27 @@ export class WorkflowsStack extends Stack {
         if (!task.action) {
           return;
         }
-        tasks.push(
-          new LambdaInvoke(this, task.action.actionName, {
-            lambdaFunction: new TaskFunction(this, {
-              workflowName,
-              taskName: task.action.actionName,
-              main: `${task.action.import}.js`,
-              depsLockFilePath: join(
-                __dirname,
-                "..",
-                "..",
-                "package-lock.json"
-              ),
-              handler: task.action.action,
-              environment: {
-                NOTEBOOK_STORE_TYPE: "dynamodb",
-                NOTE_STORE_TYPE: "dynamodb",
-                NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
-              },
-              tableReadPermissions: [this.properties.notebooksTable],
-              tableWritePermissions: [this.properties.notebooksTable],
-            }).lambdaFunction,
-          })
-        );
+        const lambdaInvoke = new LambdaInvoke(this, task.action.actionName, {
+          lambdaFunction: new TaskFunction(this, {
+            workflowName,
+            taskName: task.action.actionName,
+            main: `${task.action.import}.js`,
+            depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
+            handler: task.action.action,
+            environment: {
+              NOTEBOOK_STORE_TYPE: "dynamodb",
+              NOTE_STORE_TYPE: "dynamodb",
+              NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
+            },
+            tableReadPermissions: [this.properties.notebooksTable],
+            tableWritePermissions: [this.properties.notebooksTable],
+          }).lambdaFunction,
+        });
+        lambdaInvoke.addRetry({
+          maxAttempts: 5,
+          backoffRate: 2,
+        });
+        tasks.push(lambdaInvoke);
       });
       for (let i = 0; i < tasks.length; i += 1) {
         const next =
