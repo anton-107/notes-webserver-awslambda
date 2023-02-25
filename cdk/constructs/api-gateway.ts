@@ -1,12 +1,15 @@
 import { APIFunction } from "./api-function";
 import { Construct } from "constructs";
 import {
+  AccessLogFormat,
   IResource,
+  LogGroupLogDestination,
   MockIntegration,
   PassthroughBehavior,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { Stack } from "aws-cdk-lib";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
 
 interface APIGatewayProps {
   functions: APIFunction[];
@@ -19,10 +22,19 @@ export class APIGateway extends Construct {
 
   constructor(parent: Stack, private props: APIGatewayProps) {
     super(parent, `APIGateway-${props.apiName}`);
+    
+
+    // create access logs log group:
+    const logGroup = new LogGroup(this, "NotesWebserverAPIAccessLogs");
 
     // Create an API Gateway resource for each of the CRUD operations
     const api = new RestApi(this, props.apiName, {
       restApiName: props.apiName,
+      deployOptions: {
+        accessLogDestination: new LogGroupLogDestination(logGroup),
+        accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
+     
+      }
     });
 
     props.functions.forEach((func) => {
