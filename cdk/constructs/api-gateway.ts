@@ -22,7 +22,6 @@ export class APIGateway extends Construct {
 
   constructor(parent: Stack, private props: APIGatewayProps) {
     super(parent, `APIGateway-${props.apiName}`);
-    
 
     // create access logs log group:
     const logGroup = new LogGroup(this, "NotesWebserverAPIAccessLogs");
@@ -33,8 +32,7 @@ export class APIGateway extends Construct {
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(logGroup),
         accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
-     
-      }
+      },
     });
 
     props.functions.forEach((func) => {
