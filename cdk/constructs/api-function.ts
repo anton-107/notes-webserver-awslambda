@@ -1,4 +1,4 @@
-import { Stack } from "aws-cdk-lib";
+import { Duration, Stack } from "aws-cdk-lib";
 import { LambdaIntegration } from "aws-cdk-lib/aws-apigateway";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -18,6 +18,7 @@ interface APIFunctionProps {
   main: string;
   depsLockFilePath: string;
   handler: string;
+  timeout: Duration;
   environment: { [key: string]: string };
   tableReadPermissions: ITable[];
   tableWritePermissions: ITable[];
@@ -39,6 +40,7 @@ export class APIFunction extends Construct {
       handler: props.handler,
       depsLockFilePath: props.depsLockFilePath,
       environment: props.environment,
+      timeout: props.timeout,
     });
 
     this.integration = new LambdaIntegration(func);

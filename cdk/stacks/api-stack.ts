@@ -41,14 +41,19 @@ export class ApiStack extends Stack {
     });
 
     const corsAllowedOrigins = "http://localhost:8080";
+    const defaultTimeout = Duration.seconds(3);
 
     const apiFunctions = routes.map((route) => {
+      const timeout = route.timeoutInSeconds
+        ? Duration.seconds(route.timeoutInSeconds)
+        : defaultTimeout;
       return new APIFunction(this, {
         depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
         main: `${route.import}.js`,
         method: route.method,
         path: this.preparePath(route.path),
         handler: route.action,
+        timeout,
         environment: {
           BASE_URL: "/prod",
           USER_STORE_TYPE: "dynamodb",
