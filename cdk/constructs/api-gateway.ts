@@ -1,5 +1,4 @@
-import { APIFunction } from "./api-function";
-import { Construct } from "constructs";
+import { Stack } from "aws-cdk-lib";
 import {
   AccessLogFormat,
   IResource,
@@ -8,8 +7,10 @@ import {
   PassthroughBehavior,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
-import { Stack } from "aws-cdk-lib";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
+import { Construct } from "constructs";
+
+import { APIFunction } from "./api-function";
 
 interface APIGatewayProps {
   functions: APIFunction[];

@@ -9,6 +9,7 @@ import {
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { workflows } from "notes-webserver/dist/router";
 import { join } from "path";
+
 import { TaskFunction } from "../constructs/task-function";
 
 interface WorkflowsStackProperties {

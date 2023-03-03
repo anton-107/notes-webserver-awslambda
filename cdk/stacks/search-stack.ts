@@ -1,4 +1,4 @@
-import { App, Stack, CfnResource, Reference } from "aws-cdk-lib";
+import { App, CfnResource, Reference, Stack } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 interface SearchStackProps {

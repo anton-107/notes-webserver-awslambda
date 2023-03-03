@@ -1,19 +1,20 @@
 import { App, Duration, Reference, Stack } from "aws-cdk-lib";
-import { APIGateway } from "../constructs/api-gateway";
-import { routes, actions } from "notes-webserver/dist/router";
-import { APIFunction } from "../constructs/api-function";
-import { join } from "path";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
-import { Secret } from "aws-cdk-lib/aws-secretsmanager";
-import { Action } from "../constructs/action";
-import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { IEventSource, StartingPosition } from "aws-cdk-lib/aws-lambda";
+import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
 } from "aws-cdk-lib/aws-s3";
+import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { StateMachine } from "aws-cdk-lib/aws-stepfunctions";
+import { actions, routes } from "notes-webserver/dist/router";
+import { join } from "path";
+
+import { Action } from "../constructs/action";
+import { APIFunction } from "../constructs/api-function";
+import { APIGateway } from "../constructs/api-gateway";
 
 interface ApiStackProperties {
   usersTable: ITable;
@@ -30,10 +31,6 @@ export class ApiStack extends Stack {
   constructor(private parent: App, private properties: ApiStackProperties) {
     super(parent, "NotesWebserverApiStack");
 
-    const jwtSerializerSecret = new Secret(this, "jwtSerializerSecret", {
-      description: "jwtSerializerSecret for notes-webserver application",
-    });
-
     this.attachmentsBucket = new Bucket(this, "attachments", {
       enforceSSL: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
@@ -41,9 +38,24 @@ export class ApiStack extends Stack {
     });
 
     const corsAllowedOrigins = "http://localhost:8080";
-    const defaultTimeout = Duration.seconds(3);
+    const apiFunctions = this.buildAPIFunctions(corsAllowedOrigins);
 
-    const apiFunctions = routes.map((route) => {
+    new APIGateway(this, {
+      apiName: "NotesWebserverAPI",
+      functions: apiFunctions,
+      apiAccessControlAllowOrigin: `'${corsAllowedOrigins}'`,
+    });
+
+    this.buildActions();
+  }
+
+  private buildAPIFunctions(corsAllowedOrigins: string): APIFunction[] {
+    const jwtSerializerSecret = new Secret(this, "jwtSerializerSecret", {
+      description: "jwtSerializerSecret for notes-webserver application",
+    });
+
+    const defaultTimeout = Duration.seconds(3);
+    return routes.map((route) => {
       const timeout = route.timeoutInSeconds
         ? Duration.seconds(route.timeoutInSeconds)
         : defaultTimeout;
@@ -85,13 +97,9 @@ export class ApiStack extends Stack {
         ),
       });
     });
+  }
 
-    new APIGateway(this, {
-      apiName: "NotesWebserverAPI",
-      functions: apiFunctions,
-      apiAccessControlAllowOrigin: `'${corsAllowedOrigins}'`,
-    });
-
+  private buildActions() {
     actions.map((action) => {
       new Action(this, {
         actionName: action.actionName,

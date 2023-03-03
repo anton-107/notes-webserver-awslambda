@@ -1,6 +1,6 @@
 import { Duration, Stack } from "aws-cdk-lib";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
-import { Runtime, IFunction } from "aws-cdk-lib/aws-lambda";
+import { IFunction, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
   NodejsFunction,
   NodejsFunctionProps,
