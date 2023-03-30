@@ -7,6 +7,7 @@ import {
   Succeed,
 } from "aws-cdk-lib/aws-stepfunctions";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
+import { Action } from "notes-webserver/dist/actions/interfaces";
 import { workflows } from "notes-webserver/dist/router";
 import { join } from "path";
 
@@ -23,33 +24,36 @@ export class WorkflowsStack extends Stack {
 
     workflows.map((workflow) => {
       const tasks: (INextable & IChainable)[] = [];
+      const catchTasks: Record<string, INextable & IChainable> = {};
       const workflowName = workflow.name;
 
       workflow.tasks.forEach((task) => {
         if (!task.action) {
           return;
         }
-        const lambdaInvoke = new LambdaInvoke(this, task.action.actionName, {
-          lambdaFunction: new TaskFunction(this, {
-            workflowName,
-            taskName: task.action.actionName,
-            main: `${task.action.import}.js`,
-            depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
-            handler: task.action.action,
-            environment: {
-              NOTEBOOK_STORE_TYPE: "dynamodb",
-              NOTE_STORE_TYPE: "dynamodb",
-              NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
-            },
-            tableReadPermissions: [this.properties.notebooksTable],
-            tableWritePermissions: [this.properties.notebooksTable],
-          }).lambdaFunction,
-        });
+        const lambdaInvoke = this.buildLambdaInvokation(
+          workflowName,
+          task.action
+        );
         lambdaInvoke.addRetry({
           maxAttempts: 5,
           backoffRate: 2,
         });
-        tasks.push(lambdaInvoke);
+        if (task.catch) {
+          const catchTask = catchTasks[task.catch];
+          if (!catchTask) {
+            throw Error(
+              `Cannot find catch task '${task.catch}' for '${task.action.actionName}' task`
+            );
+          }
+          lambdaInvoke.addCatch(catchTask);
+        }
+        if (task.type === "action") {
+          tasks.push(lambdaInvoke);
+        }
+        if (task.type === "catch") {
+          catchTasks[task.action.actionName] = lambdaInvoke;
+        }
       });
       for (let i = 0; i < tasks.length; i += 1) {
         const next =
@@ -66,6 +70,24 @@ export class WorkflowsStack extends Stack {
         }
       );
       this.workflows[workflow.name] = stateMachine;
+    });
+  }
+  private buildLambdaInvokation(workflowName: string, action: Action) {
+    return new LambdaInvoke(this, action.actionName, {
+      lambdaFunction: new TaskFunction(this, {
+        workflowName,
+        taskName: action.actionName,
+        main: `${action.import}.js`,
+        depsLockFilePath: join(__dirname, "..", "..", "package-lock.json"),
+        handler: action.action,
+        environment: {
+          NOTEBOOK_STORE_TYPE: "dynamodb",
+          NOTE_STORE_TYPE: "dynamodb",
+          NOTE_ATTACHMENTS_STORE_TYPE: "dynamodb",
+        },
+        tableReadPermissions: [this.properties.notebooksTable],
+        tableWritePermissions: [this.properties.notebooksTable],
+      }).lambdaFunction,
     });
   }
 }
